@@ -111,6 +111,7 @@ public class WeaponsManager : MonoBehaviour
         weapon.SetActive(true);
         weapon.transform.parent = playerHand;
         weapon.transform.localPosition = Vector3.zero;
+        //ONEQUIPWEAPON
         HUDManager.Instance.SetSelectedText(weapon.gameObject.name);
         HUDManager.EnableWeapon(indexIcon);
     }

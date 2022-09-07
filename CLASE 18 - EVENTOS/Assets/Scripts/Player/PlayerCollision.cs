@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class PlayerCollision : MonoBehaviour
 {
@@ -9,11 +10,15 @@ public class PlayerCollision : MonoBehaviour
 
     [SerializeField] WeaponsManager weaponManager;
 
+    public static event Action OnDead;
+    public static event Action<int> OnChangeHP;
+
     private void Start()
     {
         playerData = GetComponent<PlayerData>();
         playerMove = GetComponent<PlayerMoveForce>();
-        HUDManager.SetHPBar(playerData.HP);
+        // HUDManager.SetHPBar(playerData.HP);
+        PlayerCollision.OnChangeHP?.Invoke(playerData.HP);
     }
 
     private void OnCollisionEnter(Collision other)
@@ -23,8 +28,10 @@ public class PlayerCollision : MonoBehaviour
         {
             Destroy(other.gameObject);
             //sumar vida
-            playerData.Healing(other.gameObject.GetComponent<Pumpkin>().HealPoints);
-            HUDManager.SetHPBar(playerData.HP);
+            //playerData.Healing(other.gameObject.GetComponent<Pumpkin>().HealPoints);
+            PlayerEvents.OnHealCall(other.gameObject.GetComponent<Pumpkin>().HealPoints);
+            //HUDManager.SetHPBar(playerData.HP);
+            PlayerCollision.OnChangeHP?.Invoke(playerData.HP);
             //SUMAS SCORE
             GameManager.Score++;
             Debug.Log(GameManager.Score);
@@ -32,18 +39,23 @@ public class PlayerCollision : MonoBehaviour
 
         if (other.gameObject.CompareTag("Munitions"))
         {
-            Debug.Log("ENTRANDO EN COLISION CON " + other.gameObject.name);
-            playerData.Damage(other.gameObject.GetComponent<Munition>().DamagePoints);
-            HUDManager.SetHPBar(playerData.HP);
+
+            // Debug.Log("ENTRANDO EN COLISION CON " + other.gameObject.name);
+            //playerData.Damage(other.gameObject.GetComponent<Munition>().DamagePoints);
+            PlayerEvents.OnDamageCall(other.gameObject.GetComponent<Munition>().DamagePoints);
+            //HUDManager.SetHPBar(playerData.HP);
+            PlayerCollision.OnChangeHP?.Invoke(playerData.HP);
+
             Destroy(other.gameObject);
             if (playerData.HP <= 0)
             {
                 Debug.Log("GAME OVER");
+                //ENVIA UN MENSAJE A LOS INTERESADOS QUE EL PLAYER ESTA MUERTO
+                PlayerCollision.OnDead?.Invoke();
             }
-
             //RESTAS SCORE
             GameManager.Score--;
-            Debug.Log(GameManager.Score);
+            // Debug.Log(GameManager.Score);
         }
 
         if (other.gameObject.CompareTag("Floor"))
@@ -95,6 +107,11 @@ public class PlayerCollision : MonoBehaviour
                 Debug.Log(weaponManager.WeaponDirectory[other.gameObject.name]);
             }
         }
+
+        if (other.gameObject.CompareTag("Goal"))
+        {
+            PlayerEvents.OnWinCall();
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -108,18 +125,21 @@ public class PlayerCollision : MonoBehaviour
     }
 
     //CUANDO UN MOUSE INGRESA A UN COLLIDER
-    private void OnMouseEnter() {
+    private void OnMouseEnter()
+    {
         HUDManager.Instance.SetSelectedText(gameObject.name);
     }
 
     //CUANDO UN MOUSE SALE DE UN COLLIDER
-    private void OnMouseExit() {
+    private void OnMouseExit()
+    {
         HUDManager.Instance.SetSelectedText("");
     }
 
     //CUANDO SE PRESIONA EL CLIC IZQUIEDO EN UN COLLIDER
-    private void OnMouseDown() {
+    private void OnMouseDown()
+    {
         HUDManager.Instance.SetSelectedText(" CLICKED ");
- 
+
     }
 }

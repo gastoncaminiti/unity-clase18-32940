@@ -5,9 +5,21 @@ using UnityEngine;
 public class PlayerData : MonoBehaviour
 {
     [SerializeField]
-    [Range(1,10)]
+    [Range(1, 10)]
     private int live = 1;
     public int HP { get { return live; } }
+
+    private void OnEnable()
+    {
+        PlayerEvents.OnHeal += Healing;
+        PlayerEvents.OnDamage += Damage;
+    }
+
+    private void OnDisable()
+    {
+        PlayerEvents.OnHeal -= Healing;
+        PlayerEvents.OnDamage -= Damage;
+    }
 
     public void Healing(int value)
     {
